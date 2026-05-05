@@ -5,9 +5,9 @@ produces a structured JSON report for upgrade planning. The same file runs on
 Nautobot **1.x, 2.x, and 3.x** — feature detection is dynamic, so checks that
 don't apply to the running version emit `null`/`skipped` rather than error.
 
-The JSON output is designed to be consumed by the companion web app in the
-sibling [`webapp/`](../webapp) directory, which produces an interactive,
-PDF/Word-exportable report from it.
+The JSON output is designed to be consumed by the companion web app in
+[networktocode-llc/nautobot-upgrade-assessment-server](https://github.com/networktocode-llc/nautobot-upgrade-assessment-server),
+which produces an interactive, PDF/Word-exportable report from it.
 
 ---
 
@@ -160,12 +160,15 @@ curl -sSf \
 
 ## Feeding the output into the report app
 
-The companion web app in [`../webapp/`](../webapp) accepts this JSON file as an
-upload and renders an interactive report with PDF/Word export. From the
-repository root:
+The companion web app in
+[networktocode-llc/nautobot-upgrade-assessment-server](https://github.com/networktocode-llc/nautobot-upgrade-assessment-server)
+accepts this JSON file as an upload and renders an interactive report with
+PDF/Word export. Clone and run the web app repository:
 
 ```bash
-cp .env.example .env     # optional, override APP_PORT (default 8765)
+git clone https://github.com/networktocode-llc/nautobot-upgrade-assessment-server.git
+cd nautobot-upgrade-assessment-server
+cp .env.example .env  # optional, override APP_PORT (default 8765)
 make build
 make up
 open http://localhost:8765
