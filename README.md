@@ -42,8 +42,8 @@ which produces an interactive, PDF/Word-exportable report from it.
 The output contains **no device credentials, passwords, custom-field values, or
 user-generated content**. Only schema shape, object counts, import paths, class
 names, and deprecated-pattern evidence are collected. See the module docstring
-in [`nautobot_upgrade_readiness.py`](./nautobot_upgrade_readiness.py) for the
-full data-handling rationale.
+in [jobs/nautobot_upgrade_readiness.py](jobs/nautobot_upgrade_readiness.py) for
+the full data-handling rationale.
 
 ---
 
@@ -74,7 +74,7 @@ Pick one of the three standard ways Nautobot loads custom Jobs.
    `nautobot_config.py` (default: `$NAUTOBOT_ROOT/jobs`).
 2. Copy the file:
    ```bash
-   cp nautobot_upgrade_readiness.py $JOBS_ROOT/
+   cp jobs/nautobot_upgrade_readiness.py $JOBS_ROOT/
    chown nautobot:nautobot $JOBS_ROOT/nautobot_upgrade_readiness.py
    ```
 3. Restart the Nautobot web and worker services so they pick up the new file:
@@ -86,18 +86,21 @@ Pick one of the three standard ways Nautobot loads custom Jobs.
 
 ### Option B — Git repository (recommended for production)
 
-1. Commit `nautobot_upgrade_readiness.py` to a git repository at the path
-   `jobs/nautobot_upgrade_readiness.py`.
-2. In Nautobot: **Extensibility → Git Repositories → Add**, point it at your
-   repo, enable the **jobs** provided content type, and **Sync**.
-3. Nautobot auto-discovers the Job after sync — no service restart required.
+This repo is already laid out for Nautobot's Git Repository sync — the Job
+lives at `jobs/nautobot_upgrade_readiness.py`, which is exactly where Nautobot
+expects to find it.
+
+1. In Nautobot: **Extensibility → Git Repositories → Add**, point it at this
+   repository (or your fork), enable the **jobs** provided content type, and
+   **Sync**.
+2. Nautobot auto-discovers the Job after sync — no service restart required.
 
 ### Option C — Container-based Nautobot
 
 If your Nautobot runs in a container and you own the image, bake the file in:
 
 ```dockerfile
-COPY nautobot_upgrade_readiness.py /opt/nautobot/jobs/
+COPY jobs/nautobot_upgrade_readiness.py /opt/nautobot/jobs/
 ```
 
 Or bind-mount it from the host in your compose file:
@@ -106,7 +109,7 @@ Or bind-mount it from the host in your compose file:
 services:
   nautobot:
     volumes:
-      - ./nautobot_upgrade_readiness.py:/opt/nautobot/jobs/nautobot_upgrade_readiness.py:ro
+      - ./jobs/nautobot_upgrade_readiness.py:/opt/nautobot/jobs/nautobot_upgrade_readiness.py:ro
 ```
 
 Then `docker compose restart nautobot nautobot-worker`.
@@ -158,25 +161,12 @@ curl -sSf \
 
 ---
 
-## Feeding the output into the report app
+## Companion report app
 
-The companion web app in
-[networktocode-llc/nautobot-upgrade-assessment-server](https://github.com/networktocode-llc/nautobot-upgrade-assessment-server)
-accepts this JSON file as an upload and renders an interactive report with
-PDF/Word export. Clone and run the web app repository:
-
-```bash
-git clone https://github.com/networktocode-llc/nautobot-upgrade-assessment-server.git
-cd nautobot-upgrade-assessment-server
-cp .env.example .env  # optional, override APP_PORT (default 8765)
-make build
-make up
-open http://localhost:8765
-```
-
-Upload `assessment_job_output.json` on the landing page. Each upload becomes an
-immutable snapshot, so re-running the Job later on the same instance creates a
-new snapshot without overwriting previous reports.
+The JSON output is consumed by the companion web app in
+[networktocode-llc/nautobot-upgrade-assessment-server](https://github.com/networktocode-llc/nautobot-upgrade-assessment-server),
+which renders it as an interactive report with PDF/Word export. See that
+repository's README for setup and usage.
 
 ---
 
@@ -203,5 +193,5 @@ the Nautobot worker (Option A) or running **Sync Now** on the Git Repository
 For syntax validation without a live Nautobot:
 
 ```bash
-python -m py_compile nautobot_upgrade_readiness.py
+python -m py_compile jobs/nautobot_upgrade_readiness.py
 ```
