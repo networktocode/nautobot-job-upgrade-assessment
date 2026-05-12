@@ -3373,7 +3373,10 @@ class UpgradeReadinessAssessment(Job):
             ),
         }
 
+jobs = [UpgradeReadinessAssessment]
+
 try:
-    register_jobs(UpgradeReadinessAssessment)
+    register_jobs(*jobs)
 except:
+    print("=========LALALLA==========")
     pass
