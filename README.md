@@ -68,7 +68,18 @@ No extra Python dependencies beyond Nautobot itself. Optional but nice-to-have:
 
 Pick one of the three standard ways Nautobot loads custom Jobs.
 
-### Option A — `JOBS_ROOT` (simplest)
+### Option A — Git repository (recommended)
+
+This repo is already laid out for Nautobot's Git Repository sync — the Job
+lives at `jobs/nautobot_upgrade_readiness.py`, which is exactly where Nautobot
+expects to find it.
+
+1. In Nautobot: **Extensibility → Git Repositories → Add**, point it at this
+   repository (or your fork), enable the **jobs** provided content type, and
+   **Sync**.
+2. Nautobot auto-discovers the Job after sync — no service restart required.
+
+### Option B — `JOBS_ROOT`
 
 1. On your Nautobot host, identify the value of `JOBS_ROOT` in
    `nautobot_config.py` (default: `$NAUTOBOT_ROOT/jobs`).
@@ -83,17 +94,6 @@ Pick one of the three standard ways Nautobot loads custom Jobs.
    # or, for docker-compose based installs:
    docker compose restart nautobot nautobot-worker
    ```
-
-### Option B — Git repository (recommended for production)
-
-This repo is already laid out for Nautobot's Git Repository sync — the Job
-lives at `jobs/nautobot_upgrade_readiness.py`, which is exactly where Nautobot
-expects to find it.
-
-1. In Nautobot: **Extensibility → Git Repositories → Add**, point it at this
-   repository (or your fork), enable the **jobs** provided content type, and
-   **Sync**.
-2. Nautobot auto-discovers the Job after sync — no service restart required.
 
 ### Option C — Container-based Nautobot
 
@@ -186,9 +186,9 @@ repository's README for setup and usage.
 
 ## Development
 
-The Job is a single self-contained file. Edits take effect after restarting
-the Nautobot worker (Option A) or running **Sync Now** on the Git Repository
-(Option B).
+The Job is a single self-contained file. Edits take effect after running
+**Sync Now** on the Git Repository (Option A) or restarting the Nautobot
+worker (Option B).
 
 For syntax validation without a live Nautobot:
 
