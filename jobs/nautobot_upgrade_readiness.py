@@ -66,13 +66,23 @@ import re
 from django.conf import settings
 from django.db import connection
 
-# The ``Job`` base class moved between ``nautobot.extras`` (1.x) and
-# ``nautobot.apps`` (2.x). Prefer the 2.x public location and fall back to
-# the 1.x path so this file loads on any supported version.
+# The ``Job`` base class and ``ChoiceVar`` moved between ``nautobot.extras``
+# (1.x) and ``nautobot.apps`` (2.x). Prefer the 2.x public location and fall
+# back to the 1.x path so this file loads on any supported version.
 try:
-    from nautobot.apps.jobs import Job, ChoiceVar, register_jobs
+    from nautobot.apps.jobs import Job, ChoiceVar
 except ImportError:
     from nautobot.extras.jobs import Job, ChoiceVar
+
+# ``register_jobs`` is required on Nautobot 2.0+ for jobs loaded via
+# ``JOBS_ROOT`` / a git repository to be picked up by the registry; it does
+# not exist on 1.x, where simply defining the class is enough. Keep its import
+# isolated so a missing/renamed ``register_jobs`` never takes ``Job`` or
+# ``ChoiceVar`` down with it.
+try:
+    from nautobot.apps.jobs import register_jobs
+except ImportError:
+    register_jobs = None
 
 
 # Path to this script itself. The source scanner excludes this file so the
@@ -3375,7 +3385,10 @@ class UpgradeReadinessAssessment(Job):
 
 jobs = [UpgradeReadinessAssessment]
 
-try:
+# On Nautobot 2.0+ the registry only discovers jobs that call ``register_jobs``;
+# on 1.x the symbol doesn't exist (``register_jobs is None``) and defining the
+# class above is sufficient. We deliberately don't swallow exceptions from the
+# call itself — if registration fails on a version that needs it, the job would
+# silently never appear, so let that error surface in the Nautobot logs.
+if register_jobs is not None:
     register_jobs(*jobs)
-except:
-    pass
