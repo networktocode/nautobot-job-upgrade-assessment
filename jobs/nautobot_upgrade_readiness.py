@@ -3378,5 +3378,4 @@ jobs = [UpgradeReadinessAssessment]
 try:
     register_jobs(*jobs)
 except:
-    print("=========LALALLA==========")
     pass
