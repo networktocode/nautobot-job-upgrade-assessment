@@ -70,7 +70,7 @@ from django.db import connection
 # ``nautobot.apps`` (2.x). Prefer the 2.x public location and fall back to
 # the 1.x path so this file loads on any supported version.
 try:
-    from nautobot.apps.jobs import Job, ChoiceVar
+    from nautobot.apps.jobs import Job, ChoiceVar, register_jobs
 except ImportError:
     from nautobot.extras.jobs import Job, ChoiceVar
 
@@ -3372,3 +3372,8 @@ class UpgradeReadinessAssessment(Job):
                 "to write to its own file."
             ),
         }
+
+try:
+    register_jobs(UpgradeReadinessAssessment)
+except:
+    pass
