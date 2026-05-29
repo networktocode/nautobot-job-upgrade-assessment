@@ -18,7 +18,8 @@ which produces an interactive, PDF/Word-exportable report from it.
 | Environment | Nautobot, Python, Django, database engine & version, queue backend (Celery vs RQ) |
 | Settings hygiene | Removed/deprecated settings still present, `STRICT_FILTERING`, pre-1.5 Celery queue pinning, debug mode, auth backends |
 | Compatibility matrix | Runtime Python / Django / DB versions vs the target's requirements, with `ok` / `runtime_too_old` / `runtime_too_new` / `db_too_old` / `mismatch` verdicts per axis |
-| Installed apps | Runtime introspection (models, views, API, filtersets, nav) + per-app source-code scan using pylint-nautobot catalogs; Python code, HTML templates, and JS/CSS all scanned for deprecated patterns |
+| Installed apps | Runtime introspection (models, views, API, filtersets, nav) + per-app source-code scan using pylint-nautobot catalogs; Python code, HTML templates, JS/CSS, and HTML-embedded-in-Python all scanned for deprecated patterns |
+| Bootstrap 3 → 5 migration | Per-app scan for the classes, `data-bs-*` attributes, grid changes (`col-xs-*`, `col-*-offset-*`, push/pull), Nautobot-specific class renames (`nb-*`), and jQuery usage covered by the upstream [Bootstrap v3→v5 guide](https://docs.nautobot.com/projects/core/en/stable/development/apps/migration/from-v2/upgrading-from-bootstrap-v3-to-v5/). Each finding carries its Bootstrap-5/Nautobot replacement hint |
 | App compatibility | `Requires-Dist` constraints from each app's metadata vs the chosen target version (reports `blocks_upgrade_to_v2`, `blocks_upgrade_to_v3`, `blocks_target_version`) |
 | Jobs | Registered jobs with per-job code-complexity analysis; scheduled-jobs detail (interval, enabled, last-run) |
 | Job approval readiness | Jobs and ScheduledJobs still using the `approval_required` flag (removed in 3.0 / 3.1 in favor of the ApprovalWorkflow model) |
