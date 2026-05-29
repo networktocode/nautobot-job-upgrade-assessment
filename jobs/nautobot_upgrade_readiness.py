@@ -277,7 +277,10 @@ def _count_import_occurrences(content, import_path):
 #   * ``REMOVED_DEPENDENCIES`` — third-party packages Nautobot no longer uses
 #   * ``REMOVED_SETTINGS`` — settings.py keys dropped in 2.0
 #   * ``DEPRECATED_CODE_PATTERNS`` — regex patterns for non-import deprecations
-#   * ``BOOTSTRAP3_PATTERNS`` — CSS classes removed when BS3 was dropped
+#   * ``BOOTSTRAP3_CLASSES`` / ``BOOTSTRAP3_AMBIGUOUS_CLASSES`` /
+#     ``BOOTSTRAP3_REGEX_RULES`` — Bootstrap 3 → 5 classes, attributes, and
+#     jQuery usage removed/renamed when BS3 was dropped (compiled into
+#     ``BOOTSTRAP_MIGRATION_RULES``)
 # ============================================================================
 
 
@@ -390,10 +393,10 @@ V1_TO_V2_MODEL_REPLACEMENTS = {
 # importing one of these will fail on 2.x+.
 # ----------------------------------------------------------------------------
 REMOVED_DEPENDENCIES = [
-    "django_cacheops",       # Nautobot no longer uses cacheops
-    "django_cryptography",   # Secrets feature replaces encrypted fields
-    "django_mptt",           # Replaced by django-tree-queries
-    "django_rq",             # Celery is now the sole queue backend
+    "django_cacheops",  # Nautobot no longer uses cacheops
+    "django_cryptography",  # Secrets feature replaces encrypted fields
+    "django_mptt",  # Replaced by django-tree-queries
+    "django_rq",  # Celery is now the sole queue backend
 ]
 
 
@@ -408,11 +411,11 @@ REMOVED_SETTINGS = [
     "CACHEOPS_DEFAULTS",
     "CACHEOPS_ENABLED",
     "CACHEOPS_REDIS",
-    "ENFORCE_GLOBAL_UNIQUE",        # replaced by IPAM Namespace uniqueness
+    "ENFORCE_GLOBAL_UNIQUE",  # replaced by IPAM Namespace uniqueness
     "DISABLE_PREFIX_LIST_HIERARCHY",
-    "RQ_QUEUES",                    # django-rq is gone; Celery-only now
+    "RQ_QUEUES",  # django-rq is gone; Celery-only now
     # --- 2.1 ---
-    "HIDE_RESTRICTED_UI",           # restricted UI is now always hidden
+    "HIDE_RESTRICTED_UI",  # restricted UI is now always hidden
     # --- 2.3 ---
     "DYNAMIC_GROUPS_MEMBER_CACHE_TIMEOUT",  # superseded by StaticGroupAssociation
     # --- 2.4 deprecated / 3.1 removed: storage settings merged into STORAGES ---
@@ -452,37 +455,37 @@ REMOVED_SETTINGS = [
 # text itself is NOT emitted, so no customer schema detail leaks out.
 REMOVED_GRAPHQL_TOKENS = [
     # --- 2.0: model consolidations ---
-    "site",              # dcim.site → dcim.location
-    "region",            # dcim.region → dcim.location
-    "device_role",       # dcim.device_role → extras.role
-    "rack_role",         # dcim.rack_role → extras.role
-    "aggregate",         # ipam.aggregate → ipam.prefix (type=Container)
-    "assigned_object",   # IPAddress.assigned_object removed
-    "ipam_role",         # ipam.role → extras.role
+    "site",  # dcim.site → dcim.location
+    "region",  # dcim.region → dcim.location
+    "device_role",  # dcim.device_role → extras.role
+    "rack_role",  # dcim.rack_role → extras.role
+    "aggregate",  # ipam.aggregate → ipam.prefix (type=Container)
+    "assigned_object",  # IPAddress.assigned_object removed
+    "ipam_role",  # ipam.role → extras.role
     # --- 2.3: renamed reverse-relations and filters ---
-    "static_groups",          # static_groups → dynamic_groups
-    "object_metadatas",       # object_metadatas → object_metadata
+    "static_groups",  # static_groups → dynamic_groups
+    "object_metadatas",  # object_metadatas → object_metadata
     "associated_object_metadatas",  # → associated_object_metadata
-    "CloudType",              # renamed to CloudResourceType
+    "CloudType",  # renamed to CloudResourceType
 ]
 
 
 DEPRECATED_API_URLS = {
     # --- 2.0: model consolidations ---
-    "/api/dcim/sites/":            "/api/dcim/locations/",
-    "/api/dcim/regions/":          "/api/dcim/locations/",
-    "/api/dcim/device-roles/":     "/api/extras/roles/",
-    "/api/dcim/rack-roles/":       "/api/extras/roles/",
-    "/api/ipam/roles/":            "/api/extras/roles/",
-    "/api/ipam/aggregates/":       "/api/ipam/prefixes/",  # type=Container
+    "/api/dcim/sites/": "/api/dcim/locations/",
+    "/api/dcim/regions/": "/api/dcim/locations/",
+    "/api/dcim/device-roles/": "/api/extras/roles/",
+    "/api/dcim/rack-roles/": "/api/extras/roles/",
+    "/api/ipam/roles/": "/api/extras/roles/",
+    "/api/ipam/aggregates/": "/api/ipam/prefixes/",  # type=Container
     # --- 2.1: user/token endpoints removed ---
     "/api/users/users/my-profile/": None,
-    "/api/users/users/session/":    None,
+    "/api/users/users/session/": None,
     "/api/users/tokens/authenticate/": None,
-    "/api/users/tokens/logout/":    None,
+    "/api/users/tokens/logout/": None,
     # --- 2.1: file / job-button URL collapse ---
-    "/files/get/":                 None,
-    "/extras/job-button/":         "/extras/jobs/",   # run URL moved under /jobs/
+    "/files/get/": None,
+    "/extras/job-button/": "/extras/jobs/",  # run URL moved under /jobs/
     # --- 2.3: plural object-metadata slug corrected to singular ---
     "/api/extras/object-metadatas/": "/api/extras/object-metadata/",
 }
@@ -503,20 +506,32 @@ TARGET_VERSION_REQUIREMENTS = {
     # server version; 3.1 is the first release to drop PostgreSQL 12/13 and
     # MySQL <8.0.11, so this matters most for that target.
     "2.3": {
-        "python_min": (3, 8), "python_max": (3, 11), "django": "3.2.x",
-        "postgres_min": (12, 0), "mysql_min": (8, 0, 0),
+        "python_min": (3, 8),
+        "python_max": (3, 11),
+        "django": "3.2.x",
+        "postgres_min": (12, 0),
+        "mysql_min": (8, 0, 0),
     },
     "2.4": {
-        "python_min": (3, 9), "python_max": (3, 12), "django": "4.2.x",
-        "postgres_min": (12, 0), "mysql_min": (8, 0, 0),
+        "python_min": (3, 9),
+        "python_max": (3, 12),
+        "django": "4.2.x",
+        "postgres_min": (12, 0),
+        "mysql_min": (8, 0, 0),
     },
     "3.0": {
-        "python_min": (3, 10), "python_max": (3, 12), "django": "4.2.x",
-        "postgres_min": (12, 0), "mysql_min": (8, 0, 0),
+        "python_min": (3, 10),
+        "python_max": (3, 12),
+        "django": "4.2.x",
+        "postgres_min": (12, 0),
+        "mysql_min": (8, 0, 0),
     },
     "3.1": {
-        "python_min": (3, 10), "python_max": (3, 12), "django": "5.2.x",
-        "postgres_min": (14, 0), "mysql_min": (8, 0, 11),
+        "python_min": (3, 10),
+        "python_max": (3, 12),
+        "django": "5.2.x",
+        "postgres_min": (14, 0),
+        "mysql_min": (8, 0, 11),
     },
 }
 
@@ -541,161 +556,287 @@ DEFAULT_TARGET_VERSION = "3.1"
 DEPRECATED_CODE_PATTERNS = {
     # --- v1 → v2: model consolidation ---
     # The ``slug`` field was removed from nearly every core model.
-    "slug_field_usage":           r"\bslug\s*=\s*models\.",
+    "slug_field_usage": r"\bslug\s*=\s*models\.",
     # Django ForeignKeys that target removed models.
-    "site_foreign_key":           r"(?:models\.ForeignKey|ForeignKey)\([^)]*['\"]dcim\.Site['\"]",
-    "region_foreign_key":         r"(?:models\.ForeignKey|ForeignKey)\([^)]*['\"]dcim\.Region['\"]",
-    "aggregate_foreign_key":      r"(?:models\.ForeignKey|ForeignKey)\([^)]*['\"]ipam\.Aggregate['\"]",
-    "device_role_foreign_key":    r"(?:models\.ForeignKey|ForeignKey)\([^)]*['\"]dcim\.DeviceRole['\"]",
-    "rack_role_foreign_key":      r"(?:models\.ForeignKey|ForeignKey)\([^)]*['\"]dcim\.RackRole['\"]",
+    "site_foreign_key": r"(?:models\.ForeignKey|ForeignKey)\([^)]*['\"]dcim\.Site['\"]",
+    "region_foreign_key": r"(?:models\.ForeignKey|ForeignKey)\([^)]*['\"]dcim\.Region['\"]",
+    "aggregate_foreign_key": r"(?:models\.ForeignKey|ForeignKey)\([^)]*['\"]ipam\.Aggregate['\"]",
+    "device_role_foreign_key": r"(?:models\.ForeignKey|ForeignKey)\([^)]*['\"]dcim\.DeviceRole['\"]",
+    "rack_role_foreign_key": r"(?:models\.ForeignKey|ForeignKey)\([^)]*['\"]dcim\.RackRole['\"]",
     # Uses of the old-style role accessor names on Device/Rack/IPAddress.
-    "old_role_reference":         r"\b(?:device_role|rack_role|ipam_role)\b",
-
+    "old_role_reference": r"\b(?:device_role|rack_role|ipam_role)\b",
     # --- v1 → v2: IPAM overhaul ---
     # IPAddress.assigned_object was removed; use IPAddressToInterface M2M.
-    "ip_assigned_object":         r"\bassigned_object(?:_type|_id)?\b",
+    "ip_assigned_object": r"\bassigned_object(?:_type|_id)?\b",
     # IPAddress.prefix renamed to IPAddress.parent.
-    "ip_prefix_attr":             r"\.prefix\s*=\s*[\"'\d]",
+    "ip_prefix_attr": r"\.prefix\s*=\s*[\"'\d]",
     # is_pool boolean replaced by Prefix.type enum.
-    "is_pool_boolean":            r"\bis_pool\s*=\s*(?:True|False)\b",
+    "is_pool_boolean": r"\bis_pool\s*=\s*(?:True|False)\b",
     # Prefix.get_child_prefixes() renamed to .descendants().
-    "get_child_prefixes":         r"\bget_child_prefixes\b",
-
+    "get_child_prefixes": r"\bget_child_prefixes\b",
     # --- v1 → v2: REST API surface changes ---
     # ?brief query param / brief_mode kwarg replaced by ?depth.
-    "brief_param":                r"\?brief\b|\bbrief_mode\s*=",
+    "brief_param": r"\?brief\b|\bbrief_mode\s*=",
     # Nested*Serializer classes were collapsed into depth-aware serializers.
-    "nested_serializer":          r"\bNested[A-Z]\w*Serializer\b",
+    "nested_serializer": r"\bNested[A-Z]\w*Serializer\b",
     # _id-suffixed filter kwargs were removed; filters now accept name/UUID.
-    "id_suffix_filter":           r"\b[a-z_]+_id\s*=\s*django_filters\.",
-
+    "id_suffix_filter": r"\b[a-z_]+_id\s*=\s*django_filters\.",
     # --- v1 → v2: JobResult field renames ---
     # Several fields were renamed; this catches attribute access patterns.
-    "jobresult_old_fields":       r"\bJobResult\.[a-z_]+\b|"
-                                  r"\b(?:job_kwargs|obj_type|job_id)\s*=",
-
+    "jobresult_old_fields": r"\bJobResult\.[a-z_]+\b|"
+    r"\b(?:job_kwargs|obj_type|job_id)\s*=",
     # --- v1 → v2: django-mptt artifacts ---
     # Tree-fields lft/rght/tree_id/level are gone with django-tree-queries.
-    "mptt_fields":                r"\b(?:lft|rght|tree_id|level)\s*=\s*models\.",
-
+    "mptt_fields": r"\b(?:lft|rght|tree_id|level)\s*=\s*models\.",
     # --- v2 → v3: removed Job metadata ---
     # approval_required moved off of Job.Meta onto the Job model row.
-    "approval_required":          r"\bapproval_required\b",
+    "approval_required": r"\bapproval_required\b",
     # commit_default is gone in the refreshed Job API.
-    "commit_default":             r"\bcommit_default\b",
-
+    "commit_default": r"\bcommit_default\b",
     # --- v2 → v3: removed GraphQL helpers ---
-    "execute_query":              r"\bexecute_query\b",
-    "execute_saved_query":        r"\bexecute_saved_query\b",
-
+    "execute_query": r"\bexecute_query\b",
+    "execute_saved_query": r"\bexecute_saved_query\b",
     # --- v2 → v3: StatusModel inheritance deprecated ---
     # New code declares a StatusField explicitly instead of inheriting.
-    "status_model_inherit":       r"\bStatusModel\b",
+    "status_model_inherit": r"\bStatusModel\b",
     # __filter_fields__ dunder is deprecated.
-    "dunder_filter_fields":       r"__filter_fields__",
-
+    "dunder_filter_fields": r"__filter_fields__",
     # --- v1 → v2: legacy view base classes (should be NautobotUIViewSet) ---
-    "legacy_object_view":         r"\bObjectView\b",
-    "legacy_object_list_view":    r"\bObjectListView\b",
-    "legacy_object_edit_view":    r"\bObjectEditView\b",
-    "legacy_object_delete_view":  r"\bObjectDeleteView\b",
-    "legacy_bulk_edit_view":      r"\bBulkEditView\b",
-    "legacy_bulk_delete_view":    r"\bBulkDeleteView\b",
-    "legacy_bulk_import_view":    r"\bBulkImportView\b",
-
+    "legacy_object_view": r"\bObjectView\b",
+    "legacy_object_list_view": r"\bObjectListView\b",
+    "legacy_object_edit_view": r"\bObjectEditView\b",
+    "legacy_object_delete_view": r"\bObjectDeleteView\b",
+    "legacy_bulk_edit_view": r"\bBulkEditView\b",
+    "legacy_bulk_delete_view": r"\bBulkDeleteView\b",
+    "legacy_bulk_import_view": r"\bBulkImportView\b",
     # --- v1 → v2: nav menu item class ---
-    "plugin_menu_item":           r"\bPluginMenuItem\b",
-
+    "plugin_menu_item": r"\bPluginMenuItem\b",
     # --- v1 → v2: legacy manage.py reference (script must be nautobot-server) ---
-    "legacy_manage_py":           r"\bmanage\.py\b",
-
+    "legacy_manage_py": r"\bmanage\.py\b",
     # --- v1 → v2: Job.run() signature change ---
     # 1.x: ``def run(self, data, commit):``  (positional form)
     # 2.x: ``def run(self, **kwargs):``       (kwargs-only form)
     # Any Job still declaring the 1.x signature will silently stop receiving
     # form input on 2.x+.
-    "legacy_run_signature":       r"def\s+run\s*\(\s*self\s*,\s*data\s*,\s*commit\b",
-
+    "legacy_run_signature": r"def\s+run\s*\(\s*self\s*,\s*data\s*,\s*commit\b",
     # --- 2.3: renames and removals ---
     # StaticGroup was merged into DynamicGroup with group_type="static".
-    "static_group_class":         r"\bStaticGroup\b",
+    "static_group_class": r"\bStaticGroup\b",
     # DynamicGroupMixin was renamed to DynamicGroupsModelMixin.
-    "dynamic_group_mixin_old":    r"\bDynamicGroupMixin\b",
+    "dynamic_group_mixin_old": r"\bDynamicGroupMixin\b",
     # CloudType was renamed to CloudResourceType.
-    "cloud_type_class":           r"\bCloudType\b",
+    "cloud_type_class": r"\bCloudType\b",
     # TreeManager default flipped — apps relying on automatic tree fields
     # must now explicitly call ``.with_tree_fields()``.
-    "with_tree_fields_call":      r"\.with_tree_fields\s*\(",
-
+    "with_tree_fields_call": r"\.with_tree_fields\s*\(",
     # --- 2.2: Controller model renames ---
     "controller_device_group_old": r"\bControllerDeviceGroup\b",
-    "deployed_controller_device":  r"\bdeployed_controller_device\b",
-    "deployed_controller_group":   r"\bdeployed_controller_group\b",
-
+    "deployed_controller_device": r"\bdeployed_controller_device\b",
+    "deployed_controller_group": r"\bdeployed_controller_group\b",
     # --- 2.4: task-queue attribute deprecated ---
     # ``task_queues`` on Job classes is replaced by ``job_queues`` via the
     # new JobQueue model.
-    "task_queues_attr":           r"\btask_queues\s*=",
-
+    "task_queues_attr": r"\btask_queues\s*=",
     # --- 3.0: GraphQL response.to_dict() removed ---
-    "response_to_dict":           r"\.to_dict\s*\(\s*\)",
-
+    "response_to_dict": r"\.to_dict\s*\(\s*\)",
     # --- 3.1 / Django 5.2: ``Meta.index_together`` removed ---
-    "meta_index_together":        r"\bindex_together\s*=",
-
+    "meta_index_together": r"\bindex_together\s*=",
     # --- 3.1: test helper renames (lowercase-s forms) ---
-    "assert_queryset_equal_old":  r"\bassertQuerysetEqual\b",
+    "assert_queryset_equal_old": r"\bassertQuerysetEqual\b",
     "assert_queryset_equal_nonempty_old": r"\bassertQuerysetEqualAndNotEmpty\b",
-
     # --- 3.1: deprecated front-end library imported as a Python module ---
     # (CSS-class / template usage of these libraries is caught by the
     # separate frontend scanner further down.)
-    "django_ajax_tables":         r"\bimport\s+django_ajax_tables\b",
-
+    "django_ajax_tables": r"\bimport\s+django_ajax_tables\b",
     # --- 1.1: REST query-param rename ``opt_in_fields`` → ``include`` ---
-    "opt_in_fields_param":        r"\bopt_in_fields\s*=",
+    "opt_in_fields_param": r"\bopt_in_fields\s*=",
     # --- 1.1 / 2.0: ``@job`` decorator was the RQ-era pattern ---
-    "rq_job_decorator":           r"^\s*@job\b",
+    "rq_job_decorator": r"^\s*@job\b",
     # --- 1.3: class-path-based Job REST URL, removed in 2.0 ---
-    "class_path_job_url":         r"/api/extras/jobs/[^/\s'\"]+/(?!\w)",
+    "class_path_job_url": r"/api/extras/jobs/[^/\s'\"]+/(?!\w)",
     # --- 2.0: CSV helper methods removed; CSV now goes through serializers ---
-    "csv_headers_attr":           r"\bcsv_headers\s*=",
-    "to_csv_method":              r"\bdef\s+to_csv\s*\(",
+    "csv_headers_attr": r"\bcsv_headers\s*=",
+    "to_csv_method": r"\bdef\s+to_csv\s*\(",
     # --- 2.0: ``composite_key`` removed from user-facing APIs ---
-    "composite_key":              r"\bcomposite_key\b",
+    "composite_key": r"\bcomposite_key\b",
 }
 
 
 # ----------------------------------------------------------------------------
-# Bootstrap 3 → 5 migration markers. Nautobot 2.x moved to Bootstrap 5, so
-# these classes (dropped from BS5) signal template work.
+# Bootstrap 3 → 5 migration markers. Nautobot 2.4 moved to Bootstrap 5, so the
+# legacy classes/attributes below signal template (and JS/CSS) work. Catalog
+# mirrors the upstream guide:
+#   .../development/apps/migration/from-v2/upgrading-from-bootstrap-v3-to-v5/
+#
+# Three sub-catalogs feed a single compiled rule set (BOOTSTRAP_MIGRATION_RULES):
+#   * ``BOOTSTRAP3_CLASSES`` — hyphenated classes safe to match as a whole token.
+#   * ``BOOTSTRAP3_AMBIGUOUS_CLASSES`` — bare words (``label``, ``close`` …) that
+#     collide with HTML tags/attributes/prose, so they are matched only inside a
+#     ``class="…"`` attribute or as a CSS ``.selector``.
+#   * ``BOOTSTRAP3_REGEX_RULES`` — grid prefixes, ``data-*`` attributes, and
+#     jQuery usage expressed directly as regex.
+# Each match carries its Bootstrap-5 / Nautobot replacement so the report gives
+# an inline migration hint (same convention as the deprecated-import catalog).
 # ----------------------------------------------------------------------------
-BOOTSTRAP3_PATTERNS = [
+
+# Hyphenated classes — matched as a whole CSS token so substrings of longer
+# class names don't false-positive (``well`` won't match ``farewell``).
+BOOTSTRAP3_CLASSES = {
     # Panels → Cards
-    "panel panel-", "panel-heading", "panel-title", "panel-body",
-    "panel-footer", "panel-default", "panel-primary", "panel-success",
-    "panel-info", "panel-warning", "panel-danger",
-    # Grid: xs breakpoint removed
-    "col-xs-",
-    # Grid: push/pull replaced by order-*
-    "col-sm-pull", "col-md-pull", "col-lg-pull",
-    "col-sm-push", "col-md-push", "col-lg-push",
+    "panel-heading": "card-header",
+    "panel-title": "card-title",
+    "panel-body": "card-body",
+    "panel-footer": "card-footer",
+    "panel-default": "card",
+    "panel-primary": "card border-primary",
+    "panel-success": "card border-success",
+    "panel-info": "card border-info",
+    "panel-warning": "card border-warning",
+    "panel-danger": "card border-danger",
+    # Labels → Badges
+    "label-default": "bg-default",
+    "label-primary": "bg-primary",
+    "label-success": "bg-success",
+    "label-info": "bg-info",
+    "label-warning": "bg-warning",
+    "label-danger": "bg-danger",
+    "label-transparent": "bg-transparent",
     # Buttons
-    "btn-default",
-    # Wells / thumbnails → cards
-    "well", "thumbnail",
-    # Labels → badges
-    "label label-", "label-default", "label-primary", "label-success",
-    "label-info", "label-warning", "label-danger",
-    # Icons: glyphicons removed (use mdi-* or similar)
-    "glyphicon",
-    # Visibility helpers replaced by d-* utilities
-    "hidden-xs", "hidden-sm", "hidden-md", "hidden-lg",
-    "visible-xs", "visible-sm", "visible-md", "visible-lg",
-    # Helpers replaced by utilities
-    "pull-left", "pull-right", "center-block",
-    "img-responsive", "img-rounded", "img-circle",
-]
+    "btn-default": "btn-secondary",
+    "btn-lg": "btn",
+    "btn-xs": "btn-sm",
+    # Forms
+    "control-label": "col-form-label",
+    "form-control-static": "form-control-plaintext",
+    "form-group": "mb-10 d-flex justify-content-center (or nb-form-group)",
+    "help-block": "form-text",
+    "checkbox-inline": "form-check-input",
+    # Dropdowns: directional alignment
+    "dropdown-menu-left": "dropdown-menu-start",
+    "dropdown-menu-right": "dropdown-menu-end",
+    # Float / alignment helpers
+    "pull-left": "float-start",
+    "pull-right": "float-end",
+    "center-block": "d-block mx-auto",
+    "text-left": "text-start",
+    "text-right": "text-end",
+    "text-muted": "text-secondary",
+    "text-hide": "removed",
+    # Accessibility helpers
+    "sr-only": "visually-hidden",
+    "sr-only-focusable": "visually-hidden-focusable",
+    # Images
+    "img-responsive": "img-fluid",
+    "img-rounded": "rounded",
+    "img-circle": "rounded-circle",
+    # Visibility helpers → d-* utilities
+    "hidden-xs": "d-block d-sm-none",
+    "hidden-sm": "d-* responsive utility",
+    "hidden-md": "d-* responsive utility",
+    "hidden-lg": "d-* responsive utility",
+    "visible-xs": "d-none d-sm-block",
+    "visible-sm": "d-* responsive utility",
+    "visible-md": "d-* responsive utility",
+    "visible-lg": "d-* responsive utility",
+    "noprint": "d-print-none",
+    # Nautobot-specific renames (all gain an ``nb-`` prefix or are removed)
+    "accordion-toggle": "nb-collapse-toggle",
+    "accordion-toggle-all": "data-nb-toggle",
+    "banner-bottom": "nb-banner-bottom",
+    "btn-inline": "nb-btn-inline-hover",
+    "color-block": "nb-color-block",
+    "editor-container": "nb-editor-container",
+    "filter-container": "removed",
+    "report-stats": "nb-report-stats",
+    "right-side-panel": "nb-right-side-panel",
+    "software-image-hierarchy": "nb-software-image-hierarchy",
+    "style-line": "nb-style-line",
+    "table-headings": "nb-table-headings",
+    "tile-description": "nb-tile-description",
+    "tile-footer": "nb-tile-footer",
+    "tile-header": "nb-tile-header",
+    "tree-hierarchy": "nb-tree-hierarchy",
+}
+
+# Bare words that collide with HTML tags (``<label>``), attributes (``required``,
+# ``hidden``), or prose — matched only when used as a CSS class to keep noise low.
+BOOTSTRAP3_AMBIGUOUS_CLASSES = {
+    # Components renamed/removed in Bootstrap 5
+    "panel": "card",
+    "well": "card",
+    "thumbnail": "card",
+    "glyphicon": "mdi mdi-* icon",
+    "caret": "mdi mdi-chevron-down",
+    "close": "btn-close",
+    "checkbox": "form-check",
+    "label": "badge",
+    "hidden": "d-none",
+    "show": "d-block",
+    # Nautobot-specific renames
+    "tile": "nb-tile",
+    "tiles": "nb-tiles",
+    "description": "nb-description",
+    "required": "nb-required",
+    "loading": "nb-loading",
+}
+
+# Grid prefixes, data attributes, and jQuery usage — expressed directly as regex.
+# Value is ``(regex, replacement)``.
+BOOTSTRAP3_REGEX_RULES = {
+    # Grid: xs breakpoint removed (mobile-first is now the default)
+    "col-xs-*": (r"(?<![\w-])col-xs-\w+", "col-sm-* (xs breakpoint removed)"),
+    # Grid: offset syntax change
+    "col-*-offset-*": (
+        r"(?<![\w-])col-(?:xs|sm|md|lg)-offset-\d+",
+        "offset-*-* (or justify-content-center)",
+    ),
+    # Grid: push/pull replaced by order-* utilities
+    "col-*-push/pull-*": (
+        r"(?<![\w-])col-(?:xs|sm|md|lg)-(?:push|pull)-\d+",
+        "order-* utilities",
+    ),
+    # jQuery Bootstrap data-attributes gained a ``bs`` namespace
+    "data-* (legacy Bootstrap attrs)": (
+        r"\bdata-(?:toggle|target|dismiss|backdrop|title)\s*=",
+        "data-bs-*",
+    ),
+    # Bootstrap 5 dropped jQuery; components are vanilla JS now
+    "jQuery usage": (
+        r"(?<![\w$.])\$\(|\bjQuery\(",
+        "vanilla JS (Bootstrap 5 dropped jQuery)",
+    ),
+}
+
+
+def _bootstrap_class_token(cls):
+    """Regex matching a CSS class as a whole hyphenated token."""
+    return r"(?<![\w-])" + re.escape(cls) + r"(?![\w-])"
+
+
+def _bootstrap_class_in_context(cls):
+    """Regex matching a class only inside a ``class="…"`` attribute or CSS ``.selector``.
+
+    Used for ambiguous bare words so they don't match HTML tags, attributes, or
+    prose (e.g. ``hidden`` the attribute vs. ``hidden`` the class).
+    """
+    token = _bootstrap_class_token(cls)
+    return r"""class\s*=\s*['"][^'"]*""" + token + r"|\." + token
+
+
+def _build_bootstrap_migration_rules():
+    """Compile the three Bootstrap sub-catalogs into one ``(label, regex, replacement)`` list."""
+    rules = []
+    for cls, replacement in BOOTSTRAP3_CLASSES.items():
+        rules.append((cls, re.compile(_bootstrap_class_token(cls)), replacement))
+    for cls, replacement in BOOTSTRAP3_AMBIGUOUS_CLASSES.items():
+        rules.append((cls, re.compile(_bootstrap_class_in_context(cls)), replacement))
+    for label, (pattern, replacement) in BOOTSTRAP3_REGEX_RULES.items():
+        rules.append((label, re.compile(pattern), replacement))
+    return rules
+
+
+# Precompiled once at import: list of ``(label, compiled_regex, replacement)``.
+BOOTSTRAP_MIGRATION_RULES = _build_bootstrap_migration_rules()
 
 
 # ----------------------------------------------------------------------------
@@ -707,16 +848,16 @@ BOOTSTRAP3_PATTERNS = [
 # ----------------------------------------------------------------------------
 DEPRECATED_FRONTEND_PATTERNS = {
     # --- 2.3: template-block names deprecated (export/import buttons) ---
-    "block_export_button":   r"\{%\s*block\s+export_button\b",
-    "block_import_button":   r"\{%\s*block\s+import_button\b",
+    "block_export_button": r"\{%\s*block\s+export_button\b",
+    "block_import_button": r"\{%\s*block\s+import_button\b",
     # --- 2.4 / 3.1: ``querystring`` tag conflicts with Django 5.1+ ---
     # App templates should move to ``django_querystring`` / ``legacy_querystring``.
-    "querystring_tag":       r"\{%\s*querystring\b",
+    "querystring_tag": r"\{%\s*querystring\b",
     # --- 3.1: front-end libraries being removed ---
-    "bootstrap_filestyle":   r"bootstrap[-_]filestyle",
-    "django_ajax_tables":    r"django[-_]ajax[-_]tables",
+    "bootstrap_filestyle": r"bootstrap[-_]filestyle",
+    "django_ajax_tables": r"django[-_]ajax[-_]tables",
     # --- 2.3: ``.with_tree_fields`` calls in templates (rare but possible) ---
-    "with_tree_fields_tpl":  r"\.with_tree_fields\s*\(",
+    "with_tree_fields_tpl": r"\.with_tree_fields\s*\(",
 }
 
 
@@ -734,12 +875,12 @@ DEPRECATED_FRONTEND_PATTERNS = {
 # replacement model name purely for the report.
 # ----------------------------------------------------------------------------
 REMOVED_CONTENT_TYPES = {
-    "dcim.site":        "dcim.location",
-    "dcim.region":      "dcim.location",
-    "dcim.devicerole":  "extras.role",
-    "dcim.rackrole":    "extras.role",
-    "ipam.aggregate":   "ipam.prefix",   # with type=Container
-    "ipam.role":        "extras.role",
+    "dcim.site": "dcim.location",
+    "dcim.region": "dcim.location",
+    "dcim.devicerole": "extras.role",
+    "dcim.rackrole": "extras.role",
+    "ipam.aggregate": "ipam.prefix",  # with type=Container
+    "ipam.role": "extras.role",
 }
 
 
@@ -868,49 +1009,50 @@ class UpgradeReadinessAssessment(Job):
             "assessment_metadata": {
                 "target_version": target_version,
                 "target_version_requirements": TARGET_VERSION_REQUIREMENTS.get(
-                    target_version, {"note": "unknown target — verify against release notes"}
+                    target_version,
+                    {"note": "unknown target — verify against release notes"},
                 ),
             },
             # Section A — environment & infrastructure
-            "environment":             self._get_environment(),
-            "settings_checks":         self._get_settings_checks(),
-            "compatibility_matrix":    self._get_compatibility_matrix(target_version),
+            "environment": self._get_environment(),
+            "settings_checks": self._get_settings_checks(),
+            "compatibility_matrix": self._get_compatibility_matrix(target_version),
             # Section B — installed apps (runtime introspection + source scan)
-            "installed_apps":          self._get_installed_apps(),
+            "installed_apps": self._get_installed_apps(),
             # Section C — dependency compatibility gating (per-app Requires-Dist)
-            "app_compatibility":       self._get_app_compatibility(target_version),
+            "app_compatibility": self._get_app_compatibility(target_version),
             # Section D — registered + scheduled jobs
-            "registered_jobs":         self._get_registered_jobs(),
-            "scheduled_jobs":          self._get_scheduled_jobs(),
+            "registered_jobs": self._get_registered_jobs(),
+            "scheduled_jobs": self._get_scheduled_jobs(),
             # Section N — Approval Workflow migration readiness (3.0/3.1)
-            "job_approval_readiness":  self._get_job_approval_readiness(),
+            "job_approval_readiness": self._get_job_approval_readiness(),
             # Section O — JobQueue migration (2.4)
-            "task_queue_migration":    self._get_task_queue_migration(),
+            "task_queue_migration": self._get_task_queue_migration(),
             # Section E — data-model inventory (counts of models that changed)
-            "data_model_inventory":    self._get_data_model_inventory(),
+            "data_model_inventory": self._get_data_model_inventory(),
             # Section P — field-state deltas (single-FK → M2M migrations)
-            "field_state_deltas":      self._get_field_state_deltas(),
+            "field_state_deltas": self._get_field_state_deltas(),
             # Section Q — UI Component Framework impact (2.4 detail-view migrations)
-            "ui_component_framework":  self._get_ui_component_framework_impact(),
+            "ui_component_framework": self._get_ui_component_framework_impact(),
             # Section R — feature rows (CustomField/Webhook/etc.) pinned to removed ContentTypes
             "content_type_feature_usage": self._get_content_type_feature_usage(),
             # Section S — opportunistic read-traffic detection
-            "read_traffic_signals":    self._get_read_traffic_signals(),
+            "read_traffic_signals": self._get_read_traffic_signals(),
             # Section F — integrations (outbound)
-            "integrations":            self._get_integrations(),
+            "integrations": self._get_integrations(),
             # Section G — API consumers (inbound)
-            "api_consumers":           self._get_api_consumers(),
+            "api_consumers": self._get_api_consumers(),
             # Section H — cross-version feature audits
-            "dynamic_groups":          self._get_dynamic_groups(),
-            "saved_views":             self._get_saved_views(),
-            "permission_constraints":  self._get_permission_constraints(),
-            "graphql_queries":         self._get_graphql_queries(),
-            "deprecated_api_urls":     self._get_deprecated_api_urls(),
+            "dynamic_groups": self._get_dynamic_groups(),
+            "saved_views": self._get_saved_views(),
+            "permission_constraints": self._get_permission_constraints(),
+            "graphql_queries": self._get_graphql_queries(),
+            "deprecated_api_urls": self._get_deprecated_api_urls(),
             # Section I — retention / migration-window planning
-            "retention_metrics":       self._get_retention_metrics(),
-            "migration_audit":         self._get_migration_audit(),
+            "retention_metrics": self._get_retention_metrics(),
+            "migration_audit": self._get_migration_audit(),
             # Section J — run Nautobot's own pre-migration validators
-            "pre_migrate_report":      self._get_pre_migrate_report(),
+            "pre_migrate_report": self._get_pre_migrate_report(),
         }
 
         self._emit_log("info", "Assessment data collection complete.")
@@ -1037,13 +1179,11 @@ class UpgradeReadinessAssessment(Job):
         A "both" result means the deployment is mid-migration.
         """
         installed_apps = list(getattr(settings, "INSTALLED_APPS", []))
-        has_celery = (
-            "django_celery_beat" in installed_apps
-            or bool(getattr(settings, "CELERY_BROKER_URL", None))
+        has_celery = "django_celery_beat" in installed_apps or bool(
+            getattr(settings, "CELERY_BROKER_URL", None)
         )
-        has_rq = (
-            "django_rq" in installed_apps
-            or bool(getattr(settings, "RQ_QUEUES", None))
+        has_rq = "django_rq" in installed_apps or bool(
+            getattr(settings, "RQ_QUEUES", None)
         )
         if has_celery and has_rq:
             return "both"
@@ -1082,9 +1222,9 @@ class UpgradeReadinessAssessment(Job):
         info = {
             "name": app_name,
             "version": "unknown",
-            "source": "unknown",     # ntc | community | custom
-            "runtime": {},           # from live introspection
-            "source_scan": {},       # from reading installed files
+            "source": "unknown",  # ntc | community | custom
+            "runtime": {},  # from live introspection
+            "source_scan": {},  # from reading installed files
         }
 
         # ---- Package metadata -----------------------------------------
@@ -1191,9 +1331,15 @@ class UpgradeReadinessAssessment(Job):
         # should be migrated to NautobotUIViewSet.
         legacy_bases = []
         for cls_name in [
-            "ObjectView", "ObjectListView", "ObjectEditView",
-            "ObjectDeleteView", "ObjectBulkEditView", "ObjectBulkDeleteView",
-            "ObjectBulkImportView", "ObjectChangeLogView", "ObjectNotesView",
+            "ObjectView",
+            "ObjectListView",
+            "ObjectEditView",
+            "ObjectDeleteView",
+            "ObjectBulkEditView",
+            "ObjectBulkDeleteView",
+            "ObjectBulkImportView",
+            "ObjectChangeLogView",
+            "ObjectNotesView",
         ]:
             try:
                 mod = importlib.import_module("nautobot.apps.views")
@@ -1245,10 +1391,9 @@ class UpgradeReadinessAssessment(Job):
             pass
 
         views_info["uses_uiviewsets"] = bool(views_info["uiviewset_classes"])
-        views_info["views_needing_migration"] = (
-            len(views_info["legacy_view_classes"])
-            + len(views_info["other_view_classes"])
-        )
+        views_info["views_needing_migration"] = len(
+            views_info["legacy_view_classes"]
+        ) + len(views_info["other_view_classes"])
         return views_info
 
     def _introspect_api(self, app_name, _inspect):
@@ -1347,6 +1492,7 @@ class UpgradeReadinessAssessment(Job):
             "templates": {},
             "static_assets": {},
             "html_in_python": [],
+            "html_in_python_bootstrap_issues": {},
         }
 
         # Exclude this file itself so the deprecated-pattern catalogs above
@@ -1382,12 +1528,16 @@ class UpgradeReadinessAssessment(Job):
         scan["deprecated_patterns"] = self._scan_deprecated_patterns(all_py_content)
 
         # HTML embedded in Python source files (tables, etc.) often needs
-        # migration when Bootstrap changes.
+        # migration when Bootstrap changes — flag the file and run the same
+        # Bootstrap catalog against its contents.
         for path, content in all_py_content.items():
             if re.search(
                 r"<(?:div|span|table|tr|td|th|a|button|form|input)\b", content
             ):
                 scan["html_in_python"].append(path)
+                bootstrap_hits = self._scan_bootstrap_content(content)
+                if bootstrap_hits:
+                    scan["html_in_python_bootstrap_issues"][path] = bootstrap_hits
 
         scan["templates"] = self._analyze_templates(app_root, html_files)
 
@@ -1403,6 +1553,11 @@ class UpgradeReadinessAssessment(Job):
             # files — ``bootstrap-filestyle`` and ``django-ajax-tables``
             # typically appear as CSS classes or script tags here.
             "frontend_pattern_hits": self._scan_frontend_static(
+                app_root, js_files + css_files
+            ),
+            # Bootstrap 3 → 5 classes/attributes/jQuery can also live in JS/CSS
+            # (e.g. ``classList.add("panel")`` or ``.panel { … }``).
+            "bootstrap_hits": self._scan_files_for_bootstrap(
                 app_root, js_files + css_files
             ),
         }
@@ -1426,9 +1581,46 @@ class UpgradeReadinessAssessment(Job):
             for name, pattern in DEPRECATED_FRONTEND_PATTERNS.items():
                 matches = re.findall(pattern, content)
                 if matches:
-                    file_hits.append(
-                        {"pattern": name, "occurrences": len(matches)}
-                    )
+                    file_hits.append({"pattern": name, "occurrences": len(matches)})
+            if file_hits:
+                hits[str(f.relative_to(app_root))] = file_hits
+        return hits
+
+    def _scan_bootstrap_content(self, content):
+        """Match the Bootstrap 3 → 5 migration catalog against a blob of text.
+
+        Returns ``[{"pattern", "occurrences", "replacement"}, ...]``. Shared by
+        the template, JS/CSS, and HTML-in-Python scanners so all three surface
+        the same findings (and the same inline replacement hints).
+        """
+        hits = []
+        for label, regex, replacement in BOOTSTRAP_MIGRATION_RULES:
+            count = len(regex.findall(content))
+            if count:
+                hits.append(
+                    {
+                        "pattern": label,
+                        "occurrences": count,
+                        "replacement": replacement,
+                    }
+                )
+        return hits
+
+    def _scan_files_for_bootstrap(self, app_root, files):
+        """Apply the Bootstrap 3 → 5 catalog to JS/CSS files.
+
+        Skips vendored bundles (files >500 KB), mirroring
+        :meth:`_scan_frontend_static`.
+        """
+        hits: dict = {}
+        for f in files:
+            try:
+                if f.stat().st_size >= 500_000:
+                    continue
+                content = f.read_text(errors="replace")
+            except Exception:
+                continue
+            file_hits = self._scan_bootstrap_content(content)
             if file_hits:
                 hits[str(f.relative_to(app_root))] = file_hits
         return hits
@@ -1512,7 +1704,7 @@ class UpgradeReadinessAssessment(Job):
             "template_count": len(html_files),
             "template_files": [str(f.relative_to(app_root)) for f in html_files],
             "bootstrap3_issues": {},
-            "frontend_pattern_hits": {},   # matches from DEPRECATED_FRONTEND_PATTERNS
+            "frontend_pattern_hits": {},  # matches from DEPRECATED_FRONTEND_PATTERNS
             "templates_needing_migration": [],
             "total_template_lines": 0,
         }
@@ -1523,13 +1715,7 @@ class UpgradeReadinessAssessment(Job):
                 template_analysis["total_template_lines"] += len(content.splitlines())
                 rel_path = str(tf.relative_to(app_root))
 
-                issues_in_file = []
-                for bs3_pattern in BOOTSTRAP3_PATTERNS:
-                    count = content.count(bs3_pattern)
-                    if count > 0:
-                        issues_in_file.append(
-                            {"pattern": bs3_pattern, "occurrences": count}
-                        )
+                issues_in_file = self._scan_bootstrap_content(content)
 
                 # Additional regex: breadcrumb <li> missing breadcrumb-item.
                 if re.search(
@@ -1558,7 +1744,9 @@ class UpgradeReadinessAssessment(Job):
                 if fe_hits:
                     template_analysis["frontend_pattern_hits"][rel_path] = fe_hits
                     if rel_path not in template_analysis["templates_needing_migration"]:
-                        template_analysis["templates_needing_migration"].append(rel_path)
+                        template_analysis["templates_needing_migration"].append(
+                            rel_path
+                        )
             except Exception:
                 pass
 
@@ -1611,9 +1799,7 @@ class UpgradeReadinessAssessment(Job):
             for req in nautobot_reqs:
                 match = re.search(r"<\s*(\d+)(?:\.(\d+))?", req)
                 if match:
-                    upper_bounds.append(
-                        (int(match.group(1)), int(match.group(2) or 0))
-                    )
+                    upper_bounds.append((int(match.group(1)), int(match.group(2) or 0)))
 
             def _excluded_by_any_upper(version):
                 return any(version >= ub for ub in upper_bounds)
@@ -1623,9 +1809,7 @@ class UpgradeReadinessAssessment(Job):
             # both v2 and v3; ``<2.4`` blocks v3 but still allows v2.0-v2.3.
             blocks_v2 = _excluded_by_any_upper((2, 0))
             blocks_v3 = _excluded_by_any_upper((3, 0))
-            blocks_target = bool(target_parts) and _excluded_by_any_upper(
-                target_parts
-            )
+            blocks_target = bool(target_parts) and _excluded_by_any_upper(target_parts)
 
             apps_info.append(
                 {
@@ -1662,10 +1846,7 @@ class UpgradeReadinessAssessment(Job):
             for job in JobModel.objects.all():
                 # Skip self — its source contains every deprecated pattern
                 # we look for (as string literals).
-                if (
-                    job.module_name == self_module
-                    and job.job_class_name == self_class
-                ):
+                if job.module_name == self_module and job.job_class_name == self_class:
                     continue
 
                 job_info = {
@@ -1769,31 +1950,35 @@ class UpgradeReadinessAssessment(Job):
         """DCIM object counts, covering both 1.x and 2.x+ schemas."""
         return {
             # --- Removed in 2.0 (migrated into Location) ---
-            "site_count":               _safe_count("dcim", "Site"),
-            "region_count":             _safe_count("dcim", "Region"),
+            "site_count": _safe_count("dcim", "Site"),
+            "region_count": _safe_count("dcim", "Region"),
             # --- Added in 2.0 ---
-            "location_count":           _safe_count("dcim", "Location"),
-            "location_type_count":      _safe_count("dcim", "LocationType"),
+            "location_count": _safe_count("dcim", "Location"),
+            "location_type_count": _safe_count("dcim", "LocationType"),
             # --- Removed in 2.0 (migrated into extras.Role) ---
-            "device_role_count":        _safe_count("dcim", "DeviceRole"),
-            "rack_role_count":          _safe_count("dcim", "RackRole"),
+            "device_role_count": _safe_count("dcim", "DeviceRole"),
+            "rack_role_count": _safe_count("dcim", "RackRole"),
             # --- Unchanged across versions ---
-            "device_count":             _safe_count("dcim", "Device"),
-            "device_type_count":        _safe_count("dcim", "DeviceType"),
-            "manufacturer_count":       _safe_count("dcim", "Manufacturer"),
-            "platform_count":           _safe_count("dcim", "Platform"),
-            "rack_count":               _safe_count("dcim", "Rack"),
-            "rack_group_count":         _safe_count("dcim", "RackGroup"),
-            "interface_count":          _safe_count("dcim", "Interface"),
-            "cable_count":              _safe_count("dcim", "Cable"),
-            "power_panel_count":        _safe_count("dcim", "PowerPanel"),
-            "power_feed_count":         _safe_count("dcim", "PowerFeed"),
-            "virtual_chassis_count":    _safe_count("dcim", "VirtualChassis"),
+            "device_count": _safe_count("dcim", "Device"),
+            "device_type_count": _safe_count("dcim", "DeviceType"),
+            "manufacturer_count": _safe_count("dcim", "Manufacturer"),
+            "platform_count": _safe_count("dcim", "Platform"),
+            "rack_count": _safe_count("dcim", "Rack"),
+            "rack_group_count": _safe_count("dcim", "RackGroup"),
+            "interface_count": _safe_count("dcim", "Interface"),
+            "cable_count": _safe_count("dcim", "Cable"),
+            "power_panel_count": _safe_count("dcim", "PowerPanel"),
+            "power_feed_count": _safe_count("dcim", "PowerFeed"),
+            "virtual_chassis_count": _safe_count("dcim", "VirtualChassis"),
             # --- Added in 1.5 (DeviceRedundancyGroup) / 1.6 (InterfaceRedundancyGroup) ---
             # Counts here are ``None`` on older instances where the model
             # didn't exist yet.
-            "device_redundancy_group_count":    _safe_count("dcim", "DeviceRedundancyGroup"),
-            "interface_redundancy_group_count": _safe_count("dcim", "InterfaceRedundancyGroup"),
+            "device_redundancy_group_count": _safe_count(
+                "dcim", "DeviceRedundancyGroup"
+            ),
+            "interface_redundancy_group_count": _safe_count(
+                "dcim", "InterfaceRedundancyGroup"
+            ),
         }
 
     def _inventory_ipam(self):
@@ -1808,19 +1993,19 @@ class UpgradeReadinessAssessment(Job):
         # breakdown dicts and error strings alongside the integer counts.
         out: dict = {
             # --- Removed in 2.0 (migrated into Prefix with type='Container') ---
-            "aggregate_count":      _safe_count("ipam", "Aggregate"),
+            "aggregate_count": _safe_count("ipam", "Aggregate"),
             # --- Added in 2.0 ---
-            "namespace_count":      _safe_count("ipam", "Namespace"),
+            "namespace_count": _safe_count("ipam", "Namespace"),
             # --- Unchanged names, but schema shifted ---
-            "prefix_count":         _safe_count("ipam", "Prefix"),
-            "ip_address_count":     _safe_count("ipam", "IPAddress"),
-            "vlan_count":           _safe_count("ipam", "VLAN"),
-            "vlan_group_count":     _safe_count("ipam", "VLANGroup"),
-            "vrf_count":            _safe_count("ipam", "VRF"),
-            "route_target_count":   _safe_count("ipam", "RouteTarget"),
-            "service_count":        _safe_count("ipam", "Service"),
+            "prefix_count": _safe_count("ipam", "Prefix"),
+            "ip_address_count": _safe_count("ipam", "IPAddress"),
+            "vlan_count": _safe_count("ipam", "VLAN"),
+            "vlan_group_count": _safe_count("ipam", "VLANGroup"),
+            "vrf_count": _safe_count("ipam", "VRF"),
+            "route_target_count": _safe_count("ipam", "RouteTarget"),
+            "service_count": _safe_count("ipam", "Service"),
             # --- Removed in 2.0 (migrated into extras.Role) ---
-            "ipam_role_count":      _safe_count("ipam", "Role"),
+            "ipam_role_count": _safe_count("ipam", "Role"),
         }
 
         # Prefix type breakdown — only meaningful on 2.x+ where the Prefix
@@ -1839,9 +2024,9 @@ class UpgradeReadinessAssessment(Job):
                     out["prefix_type_breakdown_error"] = str(exc)
             if "is_pool" in fields:
                 try:
-                    out["prefix_is_pool_count"] = (
-                        prefix_model.objects.filter(is_pool=True).count()
-                    )
+                    out["prefix_is_pool_count"] = prefix_model.objects.filter(
+                        is_pool=True
+                    ).count()
                 except Exception as exc:
                     out["prefix_is_pool_error"] = str(exc)
 
@@ -1853,9 +2038,9 @@ class UpgradeReadinessAssessment(Job):
             ip_fields = {f.name for f in ip_model._meta.get_fields()}
             if "assigned_object_id" in ip_fields:
                 try:
-                    out["ip_with_assigned_object"] = (
-                        ip_model.objects.exclude(assigned_object_id=None).count()
-                    )
+                    out["ip_with_assigned_object"] = ip_model.objects.exclude(
+                        assigned_object_id=None
+                    ).count()
                 except Exception as exc:
                     out["ip_with_assigned_object_error"] = str(exc)
 
@@ -1893,12 +2078,12 @@ class UpgradeReadinessAssessment(Job):
             vrf_fields = {f.name for f in vrf_model._meta.get_fields()}
             if "enforce_unique" in vrf_fields:
                 try:
-                    forecast["vrfs_with_enforce_unique"] = (
-                        vrf_model.objects.filter(enforce_unique=True).count()
-                    )
-                    forecast["vrfs_without_enforce_unique"] = (
-                        vrf_model.objects.filter(enforce_unique=False).count()
-                    )
+                    forecast["vrfs_with_enforce_unique"] = vrf_model.objects.filter(
+                        enforce_unique=True
+                    ).count()
+                    forecast["vrfs_without_enforce_unique"] = vrf_model.objects.filter(
+                        enforce_unique=False
+                    ).count()
                 except Exception as exc:
                     forecast["vrf_enforce_unique_error"] = str(exc)
 
@@ -1923,9 +2108,9 @@ class UpgradeReadinessAssessment(Job):
                     forecast["prefixes_without_vrf_default_global_ns"] = (
                         prefix_model.objects.filter(vrf__isnull=True).count()
                     )
-                    forecast["prefixes_with_vrf"] = (
-                        prefix_model.objects.exclude(vrf__isnull=True).count()
-                    )
+                    forecast["prefixes_with_vrf"] = prefix_model.objects.exclude(
+                        vrf__isnull=True
+                    ).count()
                 except Exception as exc:
                     forecast["prefix_vrf_distribution_error"] = str(exc)
 
@@ -1962,9 +2147,9 @@ class UpgradeReadinessAssessment(Job):
                     forecast["ips_without_vrf_default_global_ns"] = (
                         ip_model.objects.filter(vrf__isnull=True).count()
                     )
-                    forecast["ips_with_vrf"] = (
-                        ip_model.objects.exclude(vrf__isnull=True).count()
-                    )
+                    forecast["ips_with_vrf"] = ip_model.objects.exclude(
+                        vrf__isnull=True
+                    ).count()
                 except Exception as exc:
                     forecast["ip_vrf_distribution_error"] = str(exc)
 
@@ -1997,30 +2182,30 @@ class UpgradeReadinessAssessment(Job):
         # breakdown dicts (e.g. custom-field type histogram).
         out: dict = {
             # --- 2.0+: consolidated Role model ---
-            "role_count":               _safe_count("extras", "Role"),
+            "role_count": _safe_count("extras", "Role"),
             # --- Unchanged ---
-            "status_count":             _safe_count("extras", "Status"),
-            "tag_count":                _safe_count("extras", "Tag"),
-            "custom_field_count":       _safe_count("extras", "CustomField"),
+            "status_count": _safe_count("extras", "Status"),
+            "tag_count": _safe_count("extras", "Tag"),
+            "custom_field_count": _safe_count("extras", "CustomField"),
             "custom_field_choice_count": _safe_count("extras", "CustomFieldChoice"),
-            "relationship_count":       _safe_count("extras", "Relationship"),
-            "relationship_association_count":
-                                        _safe_count("extras", "RelationshipAssociation"),
-            "config_context_count":     _safe_count("extras", "ConfigContext"),
-            "config_context_schema_count":
-                                        _safe_count("extras", "ConfigContextSchema"),
-            "custom_link_count":        _safe_count("extras", "CustomLink"),
-            "export_template_count":    _safe_count("extras", "ExportTemplate"),
-            "graphql_query_count":      _safe_count("extras", "GraphQLQuery"),
-            "webhook_count":            _safe_count("extras", "Webhook"),
-            "job_count":                _safe_count("extras", "Job"),
-            "scheduled_job_count":      _safe_count("extras", "ScheduledJob"),
-            "job_hook_count":           _safe_count("extras", "JobHook"),
-            "job_button_count":         _safe_count("extras", "JobButton"),
-            "git_repository_count":     _safe_count("extras", "GitRepository"),
-            "secrets_group_count":      _safe_count("extras", "SecretsGroup"),
-            "note_count":               _safe_count("extras", "Note"),
-            "dynamic_group_count":      _safe_count("extras", "DynamicGroup"),
+            "relationship_count": _safe_count("extras", "Relationship"),
+            "relationship_association_count": _safe_count(
+                "extras", "RelationshipAssociation"
+            ),
+            "config_context_count": _safe_count("extras", "ConfigContext"),
+            "config_context_schema_count": _safe_count("extras", "ConfigContextSchema"),
+            "custom_link_count": _safe_count("extras", "CustomLink"),
+            "export_template_count": _safe_count("extras", "ExportTemplate"),
+            "graphql_query_count": _safe_count("extras", "GraphQLQuery"),
+            "webhook_count": _safe_count("extras", "Webhook"),
+            "job_count": _safe_count("extras", "Job"),
+            "scheduled_job_count": _safe_count("extras", "ScheduledJob"),
+            "job_hook_count": _safe_count("extras", "JobHook"),
+            "job_button_count": _safe_count("extras", "JobButton"),
+            "git_repository_count": _safe_count("extras", "GitRepository"),
+            "secrets_group_count": _safe_count("extras", "SecretsGroup"),
+            "note_count": _safe_count("extras", "Note"),
+            "dynamic_group_count": _safe_count("extras", "DynamicGroup"),
         }
 
         # Custom field type breakdown — the ``select`` / ``multi-select``
@@ -2028,9 +2213,11 @@ class UpgradeReadinessAssessment(Job):
         cf_model = _safe_get_model("extras", "CustomField")
         if cf_model is not None:
             try:
-                type_field = "type" if any(
-                    f.name == "type" for f in cf_model._meta.get_fields()
-                ) else None
+                type_field = (
+                    "type"
+                    if any(f.name == "type" for f in cf_model._meta.get_fields())
+                    else None
+                )
                 if type_field:
                     breakdown = {}
                     for row in cf_model.objects.values(type_field):
@@ -2058,29 +2245,28 @@ class UpgradeReadinessAssessment(Job):
     def _inventory_tenancy(self):
         """Tenancy object counts."""
         return {
-            "tenant_count":           _safe_count("tenancy", "Tenant"),
-            "tenant_group_count":     _safe_count("tenancy", "TenantGroup"),
+            "tenant_count": _safe_count("tenancy", "Tenant"),
+            "tenant_group_count": _safe_count("tenancy", "TenantGroup"),
         }
 
     def _inventory_circuits(self):
         """Circuits object counts."""
         return {
-            "provider_count":         _safe_count("circuits", "Provider"),
-            "circuit_count":          _safe_count("circuits", "Circuit"),
-            "circuit_type_count":     _safe_count("circuits", "CircuitType"),
-            "circuit_termination_count":
-                                      _safe_count("circuits", "CircuitTermination"),
+            "provider_count": _safe_count("circuits", "Provider"),
+            "circuit_count": _safe_count("circuits", "Circuit"),
+            "circuit_type_count": _safe_count("circuits", "CircuitType"),
+            "circuit_termination_count": _safe_count("circuits", "CircuitTermination"),
             "provider_network_count": _safe_count("circuits", "ProviderNetwork"),
         }
 
     def _inventory_virtualization(self):
         """Virtualization (VM/cluster) object counts."""
         return {
-            "cluster_count":            _safe_count("virtualization", "Cluster"),
-            "cluster_group_count":      _safe_count("virtualization", "ClusterGroup"),
-            "cluster_type_count":       _safe_count("virtualization", "ClusterType"),
-            "virtual_machine_count":    _safe_count("virtualization", "VirtualMachine"),
-            "vm_interface_count":       _safe_count("virtualization", "VMInterface"),
+            "cluster_count": _safe_count("virtualization", "Cluster"),
+            "cluster_group_count": _safe_count("virtualization", "ClusterGroup"),
+            "cluster_type_count": _safe_count("virtualization", "ClusterType"),
+            "virtual_machine_count": _safe_count("virtualization", "VirtualMachine"),
+            "vm_interface_count": _safe_count("virtualization", "VMInterface"),
         }
 
     # ==================================================================
@@ -2304,9 +2490,9 @@ class UpgradeReadinessAssessment(Job):
             from django.utils import timezone
 
             cutoff = timezone.now() - timedelta(days=90)
-            consumers["admin_log_entries_90d"] = (
-                LogEntry.objects.filter(action_time__gte=cutoff).count()
-            )
+            consumers["admin_log_entries_90d"] = LogEntry.objects.filter(
+                action_time__gte=cutoff
+            ).count()
         except Exception:
             pass
 
@@ -2393,9 +2579,14 @@ class UpgradeReadinessAssessment(Job):
         """
         # Full list of terms that changed meaning or disappeared in 2.x.
         deprecated_refs = [
-            "site", "region", "device_role", "rack_role",
-            "aggregate", "ipam_role", "group",   # Rack.group → Rack.rack_group
-            "vrf",                                # namespace-scoped on 2.x
+            "site",
+            "region",
+            "device_role",
+            "rack_role",
+            "aggregate",
+            "ipam_role",
+            "group",  # Rack.group → Rack.rack_group
+            "vrf",  # namespace-scoped on 2.x
         ]
 
         try:
@@ -2449,11 +2640,7 @@ class UpgradeReadinessAssessment(Job):
             queries = []
             for q in GraphQLQuery.objects.all():
                 # Some versions store text on ``query`` vs ``query_text``.
-                text = (
-                    getattr(q, "query", "")
-                    or getattr(q, "query_text", "")
-                    or ""
-                )
+                text = getattr(q, "query", "") or getattr(q, "query_text", "") or ""
                 # Whole-word counts keep the check precise — we don't
                 # want ``website`` matching the token ``site``.
                 token_hits = {}
@@ -2487,9 +2674,9 @@ class UpgradeReadinessAssessment(Job):
         The customer may want to prune them before the upgrade.
         """
         return {
-            "object_change_count":   _safe_count("extras", "ObjectChange"),
-            "job_result_count":      _safe_count("extras", "JobResult"),
-            "job_log_entry_count":   _safe_count("extras", "JobLogEntry"),
+            "object_change_count": _safe_count("extras", "ObjectChange"),
+            "job_result_count": _safe_count("extras", "JobResult"),
+            "job_log_entry_count": _safe_count("extras", "JobLogEntry"),
             # Admin log table is populated by the Django admin UI; useful
             # as a secondary indicator of how much human-driven change
             # occurs on this instance.
@@ -2971,9 +3158,9 @@ class UpgradeReadinessAssessment(Job):
                     )
                 # New ``job_queue`` FK — present on 2.4+.
                 if "job_queue" in fields:
-                    result["scheduled_jobs_with_job_queue"] = (
-                        sj_model.objects.exclude(job_queue__isnull=True).count()
-                    )
+                    result["scheduled_jobs_with_job_queue"] = sj_model.objects.exclude(
+                        job_queue__isnull=True
+                    ).count()
             except Exception as exc:
                 result["scheduled_jobs_error"] = str(exc)
 
@@ -3129,19 +3316,19 @@ class UpgradeReadinessAssessment(Job):
     # uses two FKs: ``source_type`` and ``destination_type``.
     _CONTENT_TYPE_FEATURES = [
         # (app_label, model_name, field_name, kind)
-        ("extras", "CustomField",    "content_types", "m2m"),
-        ("extras", "Status",         "content_types", "m2m"),
-        ("extras", "Tag",            "content_types", "m2m"),
-        ("extras", "Webhook",        "content_types", "m2m"),
-        ("extras", "JobHook",        "content_types", "m2m"),
-        ("extras", "JobButton",      "content_types", "m2m"),
-        ("extras", "CustomLink",     "content_type",  "fk"),
-        ("extras", "ExportTemplate", "content_type",  "fk"),
-        ("extras", "ComputedField",  "content_type",  "fk"),
-        ("extras", "Note",           "assigned_object_type", "fk"),
+        ("extras", "CustomField", "content_types", "m2m"),
+        ("extras", "Status", "content_types", "m2m"),
+        ("extras", "Tag", "content_types", "m2m"),
+        ("extras", "Webhook", "content_types", "m2m"),
+        ("extras", "JobHook", "content_types", "m2m"),
+        ("extras", "JobButton", "content_types", "m2m"),
+        ("extras", "CustomLink", "content_type", "fk"),
+        ("extras", "ExportTemplate", "content_type", "fk"),
+        ("extras", "ComputedField", "content_type", "fk"),
+        ("extras", "Note", "assigned_object_type", "fk"),
         # Relationship uses two content-type FKs (one per direction).
-        ("extras", "Relationship",   "source_type",      "fk"),
-        ("extras", "Relationship",   "destination_type", "fk"),
+        ("extras", "Relationship", "source_type", "fk"),
+        ("extras", "Relationship", "destination_type", "fk"),
     ]
 
     def _get_content_type_feature_usage(self):
@@ -3174,9 +3361,9 @@ class UpgradeReadinessAssessment(Job):
                         }
                     )
             except Exception as exc:
-                findings.setdefault("errors", {})[
-                    f"{app_label}.{model_name}"
-                ] = str(exc)
+                findings.setdefault("errors", {})[f"{app_label}.{model_name}"] = str(
+                    exc
+                )
 
         findings["flagged_count"] = len(findings["flagged"])
         return findings
@@ -3188,6 +3375,7 @@ class UpgradeReadinessAssessment(Job):
         ``kind`` is ``"m2m"`` for ``content_types`` managers and ``"fk"``
         for single ``content_type`` foreign keys.
         """
+
         def _key(ct):
             # ``ct`` is a ContentType row; build "app_label.model" lowercase.
             if ct is None:
@@ -3292,9 +3480,12 @@ class UpgradeReadinessAssessment(Job):
         # labels each sample with ``view``. Look for label values that
         # reference any removed URL namespace.
         legacy_view_tokens = [
-            "dcim:site", "dcim:region",
-            "dcim:devicerole", "dcim:rackrole",
-            "ipam:aggregate", "ipam:role",
+            "dcim:site",
+            "dcim:region",
+            "dcim:devicerole",
+            "dcim:rackrole",
+            "ipam:aggregate",
+            "ipam:role",
         ]
         hits = []
         try:
@@ -3307,9 +3498,7 @@ class UpgradeReadinessAssessment(Job):
                 continue
             for sample in family.samples:
                 view_label = (
-                    sample.labels.get("view")
-                    or sample.labels.get("view_name")
-                    or ""
+                    sample.labels.get("view") or sample.labels.get("view_name") or ""
                 )
                 if any(tok in view_label for tok in legacy_view_tokens):
                     hits.append(
@@ -3382,6 +3571,7 @@ class UpgradeReadinessAssessment(Job):
                 "to write to its own file."
             ),
         }
+
 
 jobs = [UpgradeReadinessAssessment]
 
